@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manheim Analyzer Pro | Multi-Source Retail Valuation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .gradient-bg { background: radial-gradient(ellipse at top left, rgba(6, 182, 212, 0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.1) 0%, transparent 50%);[...] 
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .tab-active { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: slideIn 0.3s ease-out forwards; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #1e293b; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    input[type="file"] { display: none; }
+    .rank-badge { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 700; font-size: 12px; }
+    .hot-gradient { background: linear-gradient(135deg, #f97316, #ef4444); }
+    .cool-gradient { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+    .source-pill { font-size: 10px; padding: 2px 8px; border-radius: 9999px; font-weight: 600; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-white gradient-bg">
+  <header class="border-b border-slate-800/50 glass sticky top-0 z-40">
+    <div class="max-w-[1800px] mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 [...] </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Manheim Analyzer Pro</h1>
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span><p class="text-slate-500 text-sm">Multi-Source Retail Valuation • Jan 2026</p></div>
+          </div>
+        </div>
+        <div class="hidden lg:flex items-center gap-6">
+          <div class="text-right"><p class="text-slate-500 text-xs uppercase tracking-wider">MUVVI Index</p><p class="text-xl font-bold text-white">206.0 <span class="text-emerald-400 text-sm">+0.6%</span></p></div>
+          <div class="w-px h-10 bg-slate-700"></div>
+          <div class="text-right"><p class="text-slate-500 text-xs uppercase tracking-wider">Avg Retail</p><p class="text-xl font-bold text-cyan-400">$25,730</p></div>
+          <div class="w-px h-10 bg-slate-700"></div>
+          <div class="text-right"><p class="text-slate-500 text-xs uppercase tracking-wider">Your Vehicles</p><p class="text-xl font-bold text-white" id="headerVehicleCount">0</p></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="px-4 py-2 border border-slate-600 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer flex items-center gap-2">Import<input type="file" id="csvImport" /></label>
+          <button onclick="exportAllData()" class="px-4 py-2 border border-slate-600 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors">Export</button>
+          <button onclick="showAnalyzeForm()" class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-semibold hover:from-cyan-400 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/20">Analyze</button>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-[1800px] mx-auto px-6 py-6">
+    <div class="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 tab-active text-white">📊 Dashboard</button>
+      <button onclick="switchTab('market')" id="tab-market" class="tab-btn px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50">📈 Market</button>
+      <button onclick="switchTab('watchlist')" id="tab-watchlist" class="tab-btn px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50">👀 Watchlist</button>
+      <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50">🚗 Inventory</button>
+      <button onclick="switchTab('history')" id="tab-history" class="tab-btn px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50">📜 History</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50">⚙️ Settings</button>
+    </div>
+    <div id="tabContent"><div id="content-dashboard"></div><div id="content-market" class="hidden"></div><div id="content-watchlist" class="hidden"></div><div id="content-inventory" class="hidden"></div><div id="content-history" class="hidden"></div><div id="content-settings" class="hidden"></div></div>
+  </main>
+  <div id="analyzeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+    <div class="glass border border-slate-700 rounded-3xl p-8 max-w-5xl w-full max-h-[95vh] overflow-y-auto scrollbar-thin">
+      <div class="flex items-center justify-between mb-6">
+        <div><h2 class="text-2xl font-bold text-white">🔍 Analyze Vehicle</h2><p class="text-slate-400 text-sm mt-1">Enter <strong>Adjusted MMR</strong> from mmr.manheim.com for comprehensive retail valuation.</p></div>
+        <button onclick="hideAnalyzeModal()" class="text-slate-400 hover:text-white transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12 " /></svg></button>
+      </div>
+      <form id="analyzeForm" onsubmit="runAnalysis(event)">
+        <input type="hidden" id="a_vehicleId">
+        <div class="mb-6 p-5 bg-slate-900/50 rounded-2xl border border-slate-700/50">
+          <h3 class="text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-4">📋 Vehicle Information</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div><label class="text-slate-400 text-sm">Year *</label><input type="number" id="a_year" value="2022" min="2000" max="2026" required class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+            <div><label class="text-slate-400 text-sm">Make *</label><input type="text" id="a_make" placeholder="Toyota" required list="makesList" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+            <div><label class="text-slate-400 text-sm">Model *</label><input type="text" id="a_model" placeholder="Camry" required class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+            <div><label class="text-slate-400 text-sm">Trim</label><input type="text" id="a_trim" placeholder="SE, XLE..." class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+            <div><label class="text-slate-400 text-sm">VIN</label><input type="text" id="a_vin" placeholder="1HGBH41JXMN109186" maxlength="17" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+            <div><label class="text-slate-400 text-sm">Mileage *</label><input type="number" id="a_mileage" value="50000" required class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+            <div><label class="text-slate-400 text-sm">Segment</label><select id="a_segment" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white mt-1 focus:border-cyan-400 focus:ring focus:ring-cyan-500 focus:ring-opacity-50">
+              <option value="suv">SUV</option>
+              <option value="sedan">Sedan</option>
+              <option value="truck">Truck</option>
+              <option value="coupe">Coupe</option>
+            </select></div>
+            <div><label class="text-slate-400 text-sm">Condition Grade (1-5)</label><input type="number" id="a_grade" value="3.5" min="1" max="5" step="0.1" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+          </div>
+        </div>
+        <div class="mb-6 p-5 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-2xl border border-cyan-500/30">
+          <h3 class="text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-2">💰 Manheim MMR Pricing</h3>
+          <p class="text-slate-400 text-xs mb-4">Enter the <strong>Adjusted MMR</strong> from mmr.manheim.com (includes condition, mileage, region adjustments)</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="text-slate-300 text-sm font-medium">Adjusted MMR (Wholesale) *</label><div class="relative mt-1"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span><input type="number" id="a_adjustedMMR" required class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div></div>
+            <div><label class="text-slate-300 text-sm font-medium">Auction Asking Price</label><div class="relative mt-1"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span><input type="number" id="a_askingPrice" placeholder="0" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div></div>
+          </div>
+        </div>
+        <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-white font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all flex items-center justify-center">Analyze</button>
+      </form>
+      <div id="analysisResults" class="hidden mt-8 pt-8 border-t border-slate-700"></div>
+    </div>
+  </div>
+  <div id="statusModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+    <div class="glass border border-slate-700 rounded-3xl p-6 max-w-md w-full">
+      <h3 class="text-xl font-bold text-white mb-4">Update Vehicle Status</h3>
+      <input type="hidden" id="statusVehicleId">
+      <div class="space-y-3 mb-6">
+        <button onclick="updateStatus('watchlist')" class="w-full p-4 rounded-xl border border-slate-600 hover:border-cyan-500 hover:bg-cyan-500/10 transition-all text-left flex items-center gap-3"><span class="text-slate-300">📇 Watchlist</span></button>
+        <button onclick="updateStatus('inventory')" class="w-full p-4 rounded-xl border border-slate-600 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all text-left flex items-center gap-3"><span class="text-slate-300">🚗 Inventory</span></button>
+        <button onclick="updateStatus('sold')" class="w-full p-4 rounded-xl border border-slate-600 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all text-left flex items-center gap-3"><span class="text-slate-300">✅ Sold</span></button>
+        <button onclick="updateStatus('passed')" class="w-full p-4 rounded-xl border border-slate-600 hover:border-slate-500 hover:bg-slate-500/10 transition-all text-left flex items-center gap-3"><span class="text-slate-300">❌ Passed</span></button>
+        <button onclick="updateStatus('lost')" class="w-full p-4 rounded-xl border border-slate-600 hover:border-red-500 hover:bg-red-500/10 transition-all text-left flex items-center gap-3"><span class="text-slate-300">🚫 Lost</span></button>
+      </div>
+      <div id="soldPriceInput" class="hidden mb-4"><label class="text-slate-400 text-sm">Actual Sale Price</label><input type="number" id="actualSalePrice" placeholder="Enter sale price" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+      <div id="boughtPriceInput" class="hidden mb-4"><label class="text-slate-400 text-sm">Actual Purchase Price</label><input type="number" id="actualBuyPrice" placeholder="Enter purchase price" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white"></div>
+      <button onclick="hideStatusModal()" class="w-full px-4 py-3 border border-slate-600 rounded-xl text-slate-300 hover:bg-slate-700 transition-colors">Cancel</button>
+    </div>
+  </div>
+  <script>
+    const MARKET_DATA = {
+      muvviIndex: 206.0, muvviChange: 0.6, wholesaleDaysSupply: 31.7, retailDaysSupply: 46, avgDaysToSell: 40, avgUsedRetailPrice: 25730, avg3YearOldPrice: 30522, avgNewCarPrice: 49814, totalSales2025: 987329, kbb: { name: 'Kelley Blue Book', adjustment: 1.00, weight: 0.25 }, edmunds: { name: 'Edmunds TMV', adjustment: 0.98, weight: 0.20 }, cargurus: { name: 'CarGurus IMV', adjustment: 0.95, weight: 0.15 }};
+ const EXPORT_DATA = marketData => { const { muvviIndex, avgUsedRetailPrice, totalSales2025 } = marketData;
+ console.log(`MUVVI Index: ${muvviIndex}, Avg Used Retail Price: $${avgUsedRetailPrice}, Total Sales in 2025: ${totalSales2025}`);};
+
+ const app = (exportFunc) => {
+  const myMarketData = {...marketData};
+  exportFunc(myMarketData);
+};
+
+ app(EXPORT_DATA);
+ return;
+  const vehicles = [];
+    let currentTab = 'dashboard';
+    function switchTab(tab) { currentTab = tab; }
+  </script>
+</body>
+</html>
